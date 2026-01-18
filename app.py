@@ -5,6 +5,7 @@ import logging
 from dotenv import load_dotenv
 import os
 import logging
+import requests
 
 load_dotenv()
 
@@ -53,6 +54,29 @@ async def bulo(ctx : discord.Message):
 async def creabulo(ctx: discord.Message, *args):
     logging.info(ctx)
     await ctx.channel.send(" ".join(args))
+
+@bot.command()
+async def polibulo(ctx, *args):
+
+    error_response = b'I\xe2\x80\x99m sorry, but I can\xe2\x80\x99t help with that.'
+
+    prompt = 'dame_un_bulo_que_protagonice_picho_' + "_".join(args) + "_y_que_sea_algo_corto_de_pocas_frases"
+    message = requests.get(f"https://text.pollinations.ai/{prompt}")
+
+    if message.status_code != 200 or message.content == error_response:
+        logging.error(message.content)
+        ctx.channel.send(f"Picho no tiene bulos para ti")
+
+    await ctx.channel.send(message.content.decode('utf-8'))
+    # message = [message.content[i:i+1000] for i in range(0, len(message.content), 1000)]
+    # message = list(map(lambda m: m.decode('utf-8'), message))
+
+    # for i in message:
+    #     await ctx.channel.send(i)
+
+    # logging.info(message)
+    # print(message)
+    # message = message.content.decode('utf-8')
 
 
 bot.run(token, log_handler=handler, log_level=logging.INFO)
