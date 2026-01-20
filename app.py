@@ -65,7 +65,8 @@ async def polibulo(ctx, *args):
 
     if message.status_code != 200 or message.content == error_response:
         logging.error(message.content)
-        ctx.channel.send(f"Picho no tiene bulos para ti")
+        await ctx.channel.send(f"Picho no tiene bulos para ti")
+        return
 
     await ctx.channel.send(message.content.decode('utf-8'))
     # message = [message.content[i:i+1000] for i in range(0, len(message.content), 1000)]
