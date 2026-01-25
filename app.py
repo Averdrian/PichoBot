@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 import os
 import logging
 import requests
+from cerebras.cloud.sdk import Cerebras
+import yt_dlp
 
 load_dotenv()
 
@@ -79,5 +81,57 @@ async def polibulo(ctx, *args):
     # print(message)
     # message = message.content.decode('utf-8')
 
+
+YDL_OPTIONS = {
+    'format': 'bestaudio/best',
+    'noplaylist': True,
+}
+
+# FFMPEG_OPTIONS = {
+#     'options': '-vn'
+# }
+
+FFMPEG_OPTIONS = {
+    'options': '-vn',
+    'executable': r'C:\ffmpeg\bin\ffmpeg.exe'
+}
+
+@bot.command()
+async def play(ctx, url: str):
+    # Verifica que el usuario esté en un canal de voz
+    if not ctx.author.voice:
+        await ctx.send("❌ Debes estar en un canal de voz.")
+        return
+
+    channel = ctx.author.voice.channel
+
+    # Conecta al canal de voz
+    if not ctx.voice_client:
+        await channel.connect()
+    else:
+        await ctx.voice_client.move_to(channel)
+
+    # Descarga info del audio
+    with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
+        info = ydl.extract_info(url, download=False)
+        audio_url = info['url']
+        title = info.get('title', 'Audio')
+
+    source = await discord.FFmpegOpusAudio.from_probe(
+        audio_url,
+        **FFMPEG_OPTIONS
+    )
+
+    ctx.voice_client.play(source)
+
+    await ctx.send(f"🎶 Reproduciendo: **{title}**")
+
+@bot.command()
+async def stop(ctx):
+    if ctx.voice_client:
+        await ctx.voice_client.disconnect()
+        await ctx.send("⏹️ Música detenida.")
+    else:
+        await ctx.send("❌ No estoy en un canal de voz.")
 
 bot.run(token, log_handler=handler, log_level=logging.INFO)
