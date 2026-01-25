@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import os
 import logging
 import requests
+from cerebras.cloud.sdk import Cerebras
 
 load_dotenv()
 
@@ -18,6 +19,10 @@ intents.message_content = True
 intents.members = True
 
 bot = commands.Bot(command_prefix='p!', intents=intents)
+
+cerebras_client = Cerebras(
+    api_key=os.getenv("CEREBRAS_API_KEY")
+)
 
 
 @bot.event
@@ -39,7 +44,7 @@ async def hello(ctx : discord.Message):
     await ctx.send(f"Hello {ctx.author.mention}!")
 
 @bot.command()
-async def bulo(ctx : discord.Message):
+async def buloclassic(ctx : discord.Message):
     canal = list(filter(lambda x : x.name == "bulos-de-picho", ctx.guild.text_channels))
     if not canal:
         await ctx.channel.send("Este canal no tiene bulos de picho :(")
@@ -68,15 +73,26 @@ async def polibulo(ctx, *args):
         ctx.channel.send(f"Picho no tiene bulos para ti")
 
     await ctx.channel.send(message.content.decode('utf-8'))
-    # message = [message.content[i:i+1000] for i in range(0, len(message.content), 1000)]
-    # message = list(map(lambda m: m.decode('utf-8'), message))
 
-    # for i in message:
-    #     await ctx.channel.send(i)
+@bot.command()
+async def bulo(ctx, *args):
+    completion = cerebras_client.chat.completions.create(
+        messages=[
+            {
+                "role":"user",
+                "content":'dame un bulo que protagonice picho ' + " ".join(args) + " y que sea algo corto de pocas frases"
+            }
+        ],
+        model="llama-3.3-70b",
+        max_completion_tokens=1024,
+        temperature=0.2,
+        top_p=1,
+        stream=False
+    )
 
-    # logging.info(message)
-    # print(message)
-    # message = message.content.decode('utf-8')
+    message = completion.choices[0].message.content
+
+    await ctx.channel.send(message)
 
 
 bot.run(token, log_handler=handler, log_level=logging.INFO)
