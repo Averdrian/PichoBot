@@ -18,6 +18,10 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='p!', intents=intents)
 
+cerebras_client = Cerebras(
+    api_key=os.getenv("CEREBRAS_API_KEY")
+)
+
 
 async def main():
     async with bot:
