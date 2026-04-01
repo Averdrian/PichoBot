@@ -5,6 +5,9 @@ import yt_dlp
 from app import logging
 import requests
 from discord.ext.commands import Bot, command, Cog
+from cerebras.cloud.sdk import Cerebras
+import os
+
 
 YDL_OPTIONS = {
     'format': 'bestaudio/best',
@@ -15,6 +18,12 @@ FFMPEG_OPTIONS = {
     'options': '-vn',
     'executable': r'C:\ffmpeg\bin\ffmpeg.exe'
 }
+
+
+cerebras_client = Cerebras(
+    api_key=os.getenv("CEREBRAS_API_KEY")
+)
+
 
 class BotCommands(Cog):
     
@@ -28,7 +37,7 @@ class BotCommands(Cog):
         await ctx.send(f"Hello {ctx.author.mention}!")
 
     @command()
-    async def bulo(self, ctx : discord.Message):
+    async def buloclassic(self, ctx : discord.Message):
         canal = list(filter(lambda x : x.name == "bulos-de-picho", ctx.guild.text_channels))
         if not canal:
             await ctx.channel.send("Este canal no tiene bulos de picho :(")
@@ -100,6 +109,23 @@ class BotCommands(Cog):
             await ctx.send("⏹️ Música detenida.")
         else:
             await ctx.send("❌ No estoy en un canal de voz.")
+            
+    @command
+    async def bulo(self, ctx, *args):
+        completion = cerebras_client.chat.completions.create(
+            messages=[{
+                "role": "user",
+                "content":'dame un bulo que protagonice picho ' + " ".join(args) + " y que sea algo corto de pocas frases",
+            }],
+            model= "llama-3.3-70b",
+            max_completion_tokens = 1024,
+            temperature = 0.2,
+            top_p = 1,
+            stream = False,
+        )
+        
+        message = completion.choices[0].message.content
+        await ctx.channel.send(message)
 
         
 
