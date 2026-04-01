@@ -1,4 +1,6 @@
 python-dotenv
 discord.py
 requests
+yt-dlp
+PyNaCl
 cerebras-cloud-sdk

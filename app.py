@@ -1,12 +1,10 @@
 import discord
 from discord.ext import commands
-import random
 import logging
 from dotenv import load_dotenv
 import os
-import logging
-import requests
-from cerebras.cloud.sdk import Cerebras
+import asyncio
+
 
 load_dotenv()
 
@@ -25,74 +23,14 @@ cerebras_client = Cerebras(
 )
 
 
-@bot.event
-async def on_ready():
-    print("Weno dia")
+async def main():
+    async with bot:
+        await load_extensions()
+        await bot.start(token)
 
 
-def just_text(message: discord.Message):
-    return (
-        message.content.strip() != "" and
-        not message.attachments and
-        not message.embeds and
-        not message.stickers
-    )
+async def load_extensions():
+    await bot.load_extension('commands')
 
-
-@bot.command()
-async def hello(ctx : discord.Message):
-    await ctx.send(f"Hello {ctx.author.mention}!")
-
-@bot.command()
-async def buloclassic(ctx : discord.Message):
-    canal = list(filter(lambda x : x.name == "bulos-de-picho", ctx.guild.text_channels))
-    if not canal:
-        await ctx.channel.send("Este canal no tiene bulos de picho :(")
-        return
-    canal = canal[0]
-    messages = [message async for message in canal.history(limit=1000) if just_text(message) and message.author.name != 'cristian.aparicio']
-    message_random = random.choice(messages)
-
-    await ctx.channel.send(message_random.content)
-
-@bot.command()
-async def creabulo(ctx: discord.Message, *args):
-    logging.info(ctx)
-    await ctx.channel.send(" ".join(args))
-
-@bot.command()
-async def polibulo(ctx, *args):
-
-    error_response = b'I\xe2\x80\x99m sorry, but I can\xe2\x80\x99t help with that.'
-
-    prompt = 'dame_un_bulo_que_protagonice_picho_' + "_".join(args) + "_y_que_sea_algo_corto_de_pocas_frases"
-    message = requests.get(f"https://text.pollinations.ai/{prompt}")
-
-    if message.status_code != 200 or message.content == error_response:
-        logging.error(message.content)
-        ctx.channel.send(f"Picho no tiene bulos para ti")
-
-    await ctx.channel.send(message.content.decode('utf-8'))
-
-@bot.command()
-async def bulo(ctx, *args):
-    completion = cerebras_client.chat.completions.create(
-        messages=[
-            {
-                "role":"user",
-                "content":'dame un bulo que protagonice picho ' + " ".join(args) + " y que sea algo corto de pocas frases"
-            }
-        ],
-        model="llama-3.3-70b",
-        max_completion_tokens=1024,
-        temperature=0.2,
-        top_p=1,
-        stream=False
-    )
-
-    message = completion.choices[0].message.content
-
-    await ctx.channel.send(message)
-
-
-bot.run(token, log_handler=handler, log_level=logging.INFO)
+if __name__ == "__main__":
+    asyncio.run(main())
