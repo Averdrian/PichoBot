@@ -8,7 +8,6 @@ from discord.ext.commands import Bot, command, Cog
 from cerebras.cloud.sdk import Cerebras
 import os
 
-
 YDL_OPTIONS = {
     'format': 'bestaudio/best',
     'noplaylist': True,
@@ -30,6 +29,7 @@ class BotCommands(Cog):
     bot: Bot
     
     def __init__(self, bot: Bot):
+        logging.info("Loading BotCommands")
         self.bot = bot
         
     @command()

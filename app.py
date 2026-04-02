@@ -18,10 +18,6 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='p!', intents=intents)
 
-cerebras_client = Cerebras(
-    api_key=os.getenv("CEREBRAS_API_KEY")
-)
-
 
 async def main():
     async with bot:
@@ -30,7 +26,7 @@ async def main():
 
 
 async def load_extensions():
-    await bot.load_extension('commands')
+    await bot.load_extension('commands.commands')
 
 if __name__ == "__main__":
     asyncio.run(main())
